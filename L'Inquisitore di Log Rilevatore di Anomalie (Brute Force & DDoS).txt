@@ -1,0 +1,76 @@
+import re
+from collections import defaultdict
+import datetime
+
+def genera_log_di_prova(percorso_file):
+    """
+    Crea un file di log simulato per testare l'Inquisitore.
+    Scrive direttamente su disco per non pesare sulla memoria.
+    """
+    voci_log = [
+        "192.168.1.10 - - [14/Jul/2026:12:00:01 +0200] \"GET /login HTTP/1.1\" 200",
+        "10.0.0.5 - - [14/Jul/2026:12:00:02 +0200] \"POST /auth HTTP/1.1\" 401",
+        "10.0.0.5 - - [14/Jul/2026:12:00:03 +0200] \"POST /auth HTTP/1.1\" 401",
+        "10.0.0.5 - - [14/Jul/2026:12:00:04 +0200] \"POST /auth HTTP/1.1\" 401",
+        "10.0.0.5 - - [14/Jul/2026:12:00:05 +0200] \"POST /auth HTTP/1.1\" 401",
+        "172.16.0.8 - - [14/Jul/2026:12:01:00 +0200] \"GET /dashboard HTTP/1.1\" 200"
+    ]
+    
+    with open(percorso_file, 'w') as f:
+        for voce in voci_log:
+            f.write(voce + "\n")
+    print(f"[*] Log di addestramento generato: {percorso_file}")
+
+def leggi_log_riga_per_riga(percorso_file):
+    """
+    Generatore ineluttabile: legge il file una riga alla volta.
+    Protegge l'integrità del sistema evitando colli di bottiglia nella RAM.
+    """
+    with open(percorso_file, 'r') as file_log:
+        for riga in file_log:
+            yield riga
+
+def caccia_alle_minacce(percorso_file, soglia_allarmi=3):
+    """
+    Il nucleo investigativo. Analizza il flusso di dati alla ricerca di 
+    comportamenti anomali (es. ripetuti errori 401 che indicano un Brute Force).
+    """
+    print("\n[*] Inizio indagine cibernetica...")
+    
+    # Pattern Regex per estrarre Indirizzo IP e Codice di Stato HTTP
+    pattern_ip = re.compile(r'^(\d{1,3}\.){3}\d{1,3}')
+    pattern_stato = re.compile(r'\s(\d{3})\s')
+    
+    # Dizionario per tracciare i fallimenti per ogni IP
+    tentativi_falliti = defaultdict(int)
+    
+    # Processa il file tramite il generatore
+    for riga in leggi_log_riga_per_riga(percorso_file):
+        match_ip = pattern_ip.search(riga)
+        match_stato = pattern_stato.search(riga)
+        
+        if match_ip and match_stato:
+            ip = match_ip.group(0)
+            stato = match_stato.group(1)
+            
+            # Il codice 401 indica "Non Autorizzato" (tentativo di login fallito)
+            if stato == '401':
+                tentativi_falliti[ip] += 1
+                
+                # Se l'IP supera la soglia, scatta l'allarme
+                if tentativi_falliti[ip] == soglia_allarmi:
+                    print(f"[!] ALLARME CRITICO: Possibile attacco Brute Force rilevato dall'IP {ip}")
+                    print(f"    Dettagli: Superata la soglia di {soglia_allarmi} tentativi falliti.")
+
+    print("[*] Indagine conclusa. Il perimetro è monitorato.\n")
+
+if __name__ == "__main__":
+    # Nome del file temporaneo nel labirinto del tuo disco
+    file_target = "access_log_simulato.txt"
+    
+    # 1. Costruiamo lo scenario
+    genera_log_di_prova(file_target)
+    
+    # 2. Scateniamo l'Inquisitore
+    # La soglia è impostata a 3 fallimenti per far scattare l'allarme
+    caccia_alle_minacce(file_target, soglia_allarmi=3)
