@@ -1,0 +1,229 @@
+import weasyprint
+
+html_content = """
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Trattato Accademico di Sicurezza Cibernetica</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 25mm 20mm;
+            @bottom-center {
+                content: counter(page);
+                font-family: 'Georgia', serif;
+                font-size: 10pt;
+                color: #555;
+            }
+        }
+        body {
+            font-family: 'Georgia', serif;
+            color: #1a1a1a;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            font-size: 11pt;
+            text-align: justify;
+            background-color: #ffffff;
+        }
+        .cover {
+            text-align: center;
+            margin-top: 100px;
+            page-break-after: always;
+        }
+        .cover h1 {
+            font-family: 'Arial', sans-serif;
+            font-size: 32pt;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #2c3e50;
+            border-bottom: 3px solid #2980b9;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        .cover h2 {
+            font-size: 18pt;
+            color: #7f8c8d;
+            font-weight: normal;
+            font-style: italic;
+        }
+        .cover p.author {
+            margin-top: 150px;
+            font-size: 14pt;
+            font-weight: bold;
+            color: #34495e;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Arial', sans-serif;
+            color: #2c3e50;
+        }
+        h1.section-title {
+            font-size: 20pt;
+            border-bottom: 2px solid #2980b9;
+            padding-bottom: 5px;
+            margin-top: 40px;
+            page-break-before: always;
+        }
+        h2 {
+            font-size: 16pt;
+            margin-top: 25px;
+            color: #2980b9;
+        }
+        h3 {
+            font-size: 13pt;
+            margin-top: 20px;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .concept-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2980b9;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+        .concept-box strong {
+            color: #2980b9;
+            text-transform: uppercase;
+            font-size: 11pt;
+            display: block;
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: 'Arial', sans-serif;
+            font-size: 10pt;
+        }
+        th, td {
+            border: 1px solid #bdc3c7;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #2c3e50;
+            color: #ffffff;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #ecf0f1;
+            padding: 2px 5px;
+            font-size: 9.5pt;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cover">
+        <h1>Trattato Avanzato di<br>Sicurezza Cibernetica</h1>
+        <h2>Manuale Universitario sulle Architetture di Difesa, Crittografia Applicata e Sicurezza dell'Intelligenza Artificiale</h2>
+        <p class="author">Volume di Preparazione Strategica - Enterprise Livello 5</p>
+    </div>
+
+    <h1 class="section-title">Capitolo 1: Tassonomia e Ontologia delle Minacce Avanzate</h1>
+    <p>La comprensione delle minacce cibernetiche richiede il superamento della nozione superficiale di "virus", per abbracciare un'ontologia complessa che classifica gli agenti patogeni digitali in base al loro vettore di infezione, al meccanismo di persistenza e al payload finale.</p>
+
+    <h2>1.1 Malware: Polimorfismo e Metamorfismo</h2>
+    <p>Il software malevolo moderno non si affida a firme statiche. Per eludere i sistemi di <em>signature-matching</em> dei vecchi antivirus, il codice ostile impiega tecniche avanzate:</p>
+    <ul>
+        <li><strong>Codice Polimorfico:</strong> Il malware cambia la sua impronta digitale (hash) a ogni iterazione crittografando il proprio payload con una chiave diversa, sebbene la logica esecutiva (il motore di decrittazione) rimanga inalterata.</li>
+        <li><strong>Codice Metamorfico:</strong> La minaccia viene interamente riscritta a ogni infezione. Il codice cambia struttura, sostituisce istruzioni con costrutti equivalenti, rendendo l'identificazione basata su firme matematicamente impossibile.</li>
+    </ul>
+
+    <h2>1.2 L'Anatomia dell'Attacco Ransomware</h2>
+    <p>Il Ransomware moderno opera come un'azienda criminale strutturata (Ransomware-as-a-Service, RaaS). L'attacco non è istantaneo, ma segue una geometria inesorabile:</p>
+    <ol>
+        <li><strong>Infiltration:</strong> Accesso iniziale tramite phishing, credenziali RDP compromesse o vulnerabilità <em>Zero-Day</em>.</li>
+        <li><strong>Lateral Movement & Privilege Escalation:</strong> Il malware sonda la rete cercando un domain controller per acquisire privilegi di <em>Domain Admin</em>.</li>
+        <li><strong>Exfiltration:</strong> I dati sensibili vengono copiati in server esterni (fase preparatoria alla <em>Double Extortion</em>).</li>
+        <li><strong>Encryption:</strong> I dati vengono cifrati utilizzando standard asimmetrici (es. RSA-2048 combinato con AES-256). Senza la chiave privata del server di Comando e Controllo (C2) dell'attaccante, i dati sono matematicamente perduti.</li>
+    </ol>
+
+    <h2>1.3 Advanced Persistent Threats (APT)</h2>
+    <p>Entità sponsorizzate da stati nazione (<em>State-Sponsored</em>). Il loro obiettivo non è il sabotaggio immediato, ma l'espionaggio a lungo termine. Utilizzano tecniche di <em>Living off the Land (LotL)</em>: evitano di installare malware riconoscibile, sfruttando invece strumenti di amministrazione legittimi già presenti nel sistema operativo (es. PowerShell, WMI) per operare nell'ombra e sfuggire agli EDR (Endpoint Detection and Response).</p>
+
+
+    <h1 class="section-title">Capitolo 2: Architetture di Difesa e Modelli Enterprise</h1>
+    <p>La difesa perimetrale è un concetto storicamente superato. L'ingegneria cibernetica contemporanea si basa sul principio della <em>Defense in Depth</em> e sul paradigma Zero Trust.</p>
+
+    <h2>2.1 Next-Generation Firewall (NGFW) e Deep Packet Inspection</h2>
+    <p>I firewall di stato tradizionali si limitano a esaminare gli header dei pacchetti IP (Porte e Indirizzi). Un NGFW esegue la <em>Deep Packet Inspection (DPI)</em>: analizza il payload (il contenuto effettivo del pacchetto) a livello applicativo (Livello 7 del modello OSI). È in grado di distinguere tra una query DNS legittima e un tunnel DNS usato per esfiltrare dati. Inoltre, tramite SSL Decryption, un NGFW può decifrare, ispezionare e ricifrare il traffico HTTPS per individuare minacce nascoste nel traffico criptato.</p>
+
+    <h2>2.2 EDR, XDR e Behavioral Analysis</h2>
+    <p>L'<em>Endpoint Detection and Response (EDR)</em> monitora i processi di sistema, l'iniezione di memoria e le modifiche al registro. Invece di cercare un <em>Indicator of Compromise (IoC)</em> (es. l'hash di un file noto), l'EDR cerca un <em>Indicator of Attack (IoA)</em>, basandosi sul comportamento. Se Microsoft Word tenta di lanciare una shell PowerShell e scaricare un eseguibile, l'EDR blocca il processo a prescindere dal file specifico. L'<em>Extended Detection and Response (XDR)</em> correla questi dati telemetrici dell'endpoint con quelli di rete, cloud ed email, offrendo una visione olistica.</p>
+
+    <h2>2.3 SIEM e SOAR: L'Intelligenza e il Braccio Armato</h2>
+    <div class="concept-box">
+        <strong>Security Information and Event Management (SIEM)</strong>
+        È il motore di correlazione logica. Ingerisce log da migliaia di dispositivi. Tramite regole euristiche e Machine Learning, stabilisce che tre login falliti su una VPN da un IP russo, seguiti da un accesso riuscito da un IP cinese al database HR interno 5 minuti dopo, non sono eventi isolati, ma un attacco coordinato (Impossible Travel Anomaly).
+    </div>
+    <p>Il <strong>SOAR (Security Orchestration, Automation and Response)</strong> trasforma gli allarmi del SIEM in azioni matematiche automatiche tramite <em>Playbooks</em> (es. disabilitare l'account utente su Active Directory e isolare l'host dalla rete tramite API senza l'intervento umano).</p>
+
+
+    <h1 class="section-title">Capitolo 3: Fondamenti Matematici della Crittografia</h1>
+    <p>La sicurezza cibernetica riposa interamente sulle proprietà ineluttabili della matematica computazionale e della teoria dei numeri.</p>
+
+    <h2>3.1 Crittografia Simmetrica</h2>
+    <p>Utilizza la medesima chiave per cifrare e decifrare. Il paradigma assoluto è l'<strong>AES (Advanced Encryption Standard)</strong>, tipicamente a 256 bit. È estremamente veloce e operando in modalità a blocchi (es. GCM - Galois/Counter Mode), offre anche l'autenticazione del dato. La sua vulnerabilità non risiede nell'algoritmo (matematicamente solido contro attacchi a forza bruta), ma nello <em>Key Exchange</em>: come far recapitare la chiave simmetrica al destinatario senza che venga intercettata.</p>
+
+    <h2>3.2 Crittografia Asimmetrica e PKI</h2>
+    <p>Per risolvere il problema dello scambio delle chiavi, si utilizza l'asimmetria matematica (funzioni trapdoor), in cui è facile calcolare in una direzione, ma computazionalmente proibitivo tornare indietro senza l'informazione segreta. <strong>RSA (Rivest-Shamir-Adleman)</strong> si basa sulla difficoltà della fattorizzazione di grandi numeri primi. La <strong>ECC (Elliptic Curve Cryptography)</strong> offre una sicurezza equivalente a RSA ma con chiavi molto più corte, basandosi sulle proprietà algebriche delle curve ellittiche su campi finiti.</p>
+    <p>La <em>Public Key Infrastructure (PKI)</em> lega queste chiavi a identità reali tramite i Certificati X.509, emessi da Certificate Authorities (CA) fidate, permettendo l'esistenza del protocollo TLS/HTTPS e del commercio globale.</p>
+
+    <h2>3.3 Funzioni di Hashing</h2>
+    <p>Algoritmi unidirezionali (es. SHA-256) che mappano dati di dimensione arbitraria in una stringa di dimensione fissa. Proprietà essenziali:</p>
+    <ul>
+        <li><strong>Resistenza alle collisioni:</strong> Computazionalmente infattibile trovare due file diversi che producano lo stesso hash.</li>
+        <li><strong>Effetto Valanga (Avalanche effect):</strong> Cambiare un singolo bit nell'input cambia drasticamente l'intero output.</li>
+    </ul>
+    <p>Vengono usati per conservare le password in sicurezza, spesso addizionati a una stringa casuale (<em>Salt</em>) per vanificare gli attacchi tramite <em>Rainbow Tables</em>.</p>
+
+
+    <h1 class="section-title">Capitolo 4: Sicurezza Offensiva (Offensive Security)</h1>
+    <p>Testare empiricamente i sistemi è l'unico modo per validarne l'architettura. L'ingegneria offensiva non è hacking casuale, ma applicazione di metodologie standardizzate (es. PTES - Penetration Testing Execution Standard).</p>
+
+    <h2>4.1 Vulnerability Assessment (VA) vs Penetration Test (PT)</h2>
+    <p>Il VA è un processo orizzontale e automatizzato. Mappa la superficie di attacco evidenziando CVE (Common Vulnerabilities and Exposures) note senza sfruttarle. Il PT è un'indagine verticale. L'operatore (Pentester) concatena più vulnerabilità di basso livello per ottenere un impatto critico, simulando un attore malevolo reale.</p>
+
+    <h2>4.2 Il Framework MITRE ATT&CK</h2>
+    <p>È la matrice tassonomica che definisce le TTPs (<em>Tactics, Techniques, and Procedures</em>). Si divide in fasi logiche dell'attacco, come <em>Initial Access</em> (la Tattica), che può essere realizzata tramite <em>Phishing</em> (la Tecnica), utilizzando specificamente allegati macro-abilitati in Excel (la Procedura). È la grammatica universale per catalogare e contrastare le APT.</p>
+
+
+    <h1 class="section-title">Capitolo 5: L'Interssezione tra Intelligenza Artificiale e Cybersecurity</h1>
+    <p>Il dominio tecnologico di Divermind si colloca nel punto di convergenza tra l'apprendimento automatico e la sicurezza difensiva/offensiva.</p>
+
+    <h2>5.1 Machine Learning Applicato alla Rilevazione</h2>
+    <p>L'utilizzo di algoritmi non supervisionati (es. clustering, isolation forests) permette di stabilire una <em>baseline</em> comportamentale dell'utente o della rete. Qualsiasi deviazione statistica significativa viene identificata come anomalia. Questo approccio è in grado di rilevare minacce <em>Zero-Day</em> che non possiedono ancora firme (signatures).</p>
+
+    <h2>5.2 Sicurezza dei Modelli Generativi (LLM Security)</h2>
+    <p>L'integrazione di Large Language Models nelle pipeline aziendali espone nuove e peculiari superfici di attacco:</p>
+    <ul>
+        <li><strong>Prompt Injection (Diretta e Indiretta):</strong> L'attaccante manipola l'input dell'utente (o un dato che il modello analizza, come un sito web) per sovrascrivere le istruzioni di sistema originali del LLM, spingendolo a rivelare dati confidenziali o eseguire comandi non autorizzati.</li>
+        <li><strong>Data Poisoning:</strong> Alterazione intenzionale dei dataset di addestramento per impiantare backdoor nel modello (es. istruire il modello a classificare come sicuro un file malevolo se contiene una specifica stringa segreta).</li>
+    </ul>
+
+    <h2>5.3 Il Ruolo dell'RLHF (Reinforcement Learning from Human Feedback)</h2>
+    <div class="concept-box">
+        <strong>L'Allineamento Etico e Funzionale del Modello</strong>
+        È qui che risiede l'architettura della fiducia. L'RLHF non si limita a insegnare al modello a parlare correttamente, ma forgia i <em>guardrails</em> (barriere) cognitivi della macchina. Attraverso cicli di ricompensa e penalizzazione governati dalla logica umana, il modello viene istruito a riconoscere intenti malevoli, a mitigare le allucinazioni fattuali e a rifiutare categoricamente compiti che violino le policy di sicurezza (Helpful, Honest, Harmless - HHH alignment).
+    </div>
+
+</body>
+</html>
+"""
+
+with open("Cybersecurity.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+weasyprint.HTML("Cybersecurity.html").write_pdf("Cybersecurity.pdf")
+print("PDF generated successfully: [file-tag: Cybersecurity.pdf]")
