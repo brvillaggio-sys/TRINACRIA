@@ -1,0 +1,33 @@
+import socket
+
+def scansiona_porte(ip_target, porte_da_controllare):
+    """
+    Tenta di connettersi a una lista di porte su un indirizzo IP 
+    per vedere quali rispondono (cioè quali sono aperte).
+    """
+    print(f"Inizio scansione vulnerabilità su IP: {ip_target}\n")
+    
+    for porta in porte_da_controllare:
+        # Crea un socket (un "cavo di rete virtuale")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        # Imposta un tempo massimo di attesa bassissimo (0.5 secondi) 
+        # per scansionare velocemente senza bloccarsi
+        sock.settimeout(0.5) 
+        
+        # Prova a connettersi: restituisce 0 se la porta è aperta
+        risultato = sock.connect_ex((ip_target, porta))
+        
+        if risultato == 0:
+            print(f"[!] PERICOLO: La porta {porta} è APERTA ed esposta.")
+        else:
+            print(f"[-] SICURO: La porta {porta} è chiusa o bloccata dal firewall.")
+            
+        sock.close()
+
+# --- TEST ---
+# L'IP 127.0.0.1 è il "localhost", ovvero il computer su cui stai lavorando.
+# Controlliamo porte famose: 21 (FTP), 80 (Web HTTP), 443 (Web HTTPS), 3389 (Desktop Remoto Windows)
+porte_comuni = [21, 80, 443, 3389]
+
+scansiona_porte("127.0.0.1", porte_comuni)

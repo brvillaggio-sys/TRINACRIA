@@ -1,0 +1,36 @@
+import re
+
+def scansiona_dati_sensibili(testo):
+    """
+    Cerca all'interno di un testo eventuali email o numeri 
+    di carta di credito per evitare fughe di dati.
+    """
+    risultati = {}
+    
+    # Cerca schemi simili a indirizzi email (es. nome@azienda.com)
+    regex_email = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    risultati['email'] = re.findall(regex_email, testo)
+    
+    # Cerca schemi simili a carte di credito (13-16 numeri, con o senza spazi)
+    regex_carte = r'\b(?:\d[ -]*?){13,16}\b'
+    risultati['carte_credito'] = re.findall(regex_carte, testo)
+    
+    return risultati
+
+# --- TEST ---
+bozza_documento = """
+Gentile cliente, le confermiamo che la fattura è stata emessa.
+Per problemi contatti l'amministrazione su admin.finance@azienda.it.
+Vi ricordiamo che il pagamento avverrà sulla carta 4532 1111 2222 3333.
+Cordiali saluti.
+"""
+
+print("Scansione documento in corso...\n")
+allerte = scansiona_dati_sensibili(bozza_documento)
+
+if allerte['email'] or allerte['carte_credito']:
+    print("[ATTENZIONE] Trovati possibili dati sensibili nel testo!")
+    print(f"- Email rilevate: {allerte['email']}")
+    print(f"- Carte di credito rilevate: {allerte['carte_credito']}")
+else:
+    print("[OK] Nessun dato sensibile evidente rilevato.")
