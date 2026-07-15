@@ -1,0 +1,83 @@
+import re
+from collections import defaultdict
+from datetime import datetime
+
+class MiniIDS:
+    def __init__(self):
+        # Tracking degli IP
+        self.failed_logins = defaultdict(int)
+        self.malicious_requests = defaultdict(list)
+        
+        # Soglia per considerare un IP sotto attacco brute-force
+        self.BRUTE_FORCE_THRESHOLD = 5 
+        
+        # Pattern RegEx per identificare i campi del log web standard
+        # Formato: IP - - [Data] "Metodo Endpoint Protocollo" Status_Code Dimensione
+        self.log_pattern = re.compile(
+            r'(?P<ip>\d+\.\d+\.\d+\.\d+) - - \[(?P<date>.*?)\] '
+            r'"(?P<method>\w+) (?P<endpoint>.*?) HTTP/.*?" (?P<status>\d+) .+'
+        )
+
+        # Firme degli attacchi (Signature-based detection)
+        self.attack_signatures = {
+            "SQL Injection": re.compile(r"(%27)|(')|(--)|(%23)|(#)|(UNION|SELECT|INSERT|DROP)", re.IGNORECASE),
+            "Path Traversal": re.compile(r"(\.\./)|(\.\.\\)"),
+            "XSS": re.compile(r"(<script>)|(%3Cscript%3E)", re.IGNORECASE)
+        }
+
+    def analyze_log_file(self, file_path: str):
+        print(f"[*] Avvio analisi del file log: {file_path}")
+        
+        try:
+            with open(file_path, 'r') as file:
+                for line in file:
+                    self._process_log_line(line)
+            
+            self._generate_report()
+        except FileNotFoundError:
+            print(f"[-] File {file_path} non trovato.")
+
+    def _process_log_line(self, line: str):
+        match = self.log_pattern.search(line)
+        if not match:
+            return # Riga non conforme, salta
+
+        ip = match.group('ip')
+        endpoint = match.group('endpoint')
+        status = int(match.group('status'))
+
+        # 1. Rilevamento Brute Force (Es. troppi 401 Unauthorized su /login)
+        if "login" in endpoint and status in [401, 403]:
+            self.failed_logins[ip] += 1
+
+        # 2. Rilevamento Payload Maligni nell'URL
+        for attack_name, signature in self.attack_signatures.items():
+            if signature.search(endpoint):
+                self.malicious_requests[ip].append((attack_name, endpoint))
+
+    def _generate_report(self):
+        print("\n" + "="*40)
+        print("??? REPORT DI SICUREZZA - MINI IDS ???")
+        print("="*40)
+
+        print("\n[!] Allarmi Brute Force (Tentativi di Login Falliti):")
+        brute_forces = {ip: count for ip, count in self.failed_logins.items() if count >= self.BRUTE_FORCE_THRESHOLD}
+        if brute_forces:
+            for ip, count in brute_forces.items():
+                print(f"  -> IP: {ip} | Tentativi falliti: {count} (POSSIBILE ATTACCO)")
+        else:
+            print("  Nessun attacco brute-force rilevato.")
+
+        print("\n[!] Rilevamento Attacchi Web (Signature Match):")
+        if self.malicious_requests:
+            for ip, attacks in self.malicious_requests.items():
+                print(f"  -> IP: {ip} ha tentato i seguenti exploit:")
+                for attack_name, payload in set(attacks): # Set per evitare duplicati visivi
+                    print(f"     - {attack_name} rilevato in: {payload[:50]}...")
+        else:
+            print("  Nessun payload maligno rilevato.")
+        print("="*40 + "\n")
+
+# --- Esempio di utilizzo (crea un file access.log fittizio per testarlo) ---
+# ids = MiniIDS()
+# ids.analyze_log_file("access.log")
