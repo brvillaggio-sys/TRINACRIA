@@ -1,0 +1,39 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+def trova_documento_simile(query, documenti):
+    """
+    Trova il documento più semanticamente vicino alla query fornita.
+    Richiede l'installazione di scikit-learn: pip install scikit-learn
+    """
+    # Inizializza il vettorizzatore TF-IDF
+    vectorizer = TfidfVectorizer()
+
+    # Crea la matrice matematica per i documenti e la query
+    # Inseriamo la query alla fine della lista per vettorizzare tutto insieme
+    tfidf_matrix = vectorizer.fit_transform(documenti + [query])
+
+    # Calcola la similarità del coseno tra la query (ultimo elemento) e il resto del corpus
+    similarita = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
+
+    # Trova l'indice del documento con il punteggio di similarità più alto
+    indice_migliore = similarita.argsort()[0][-1]
+    punteggio_migliore = similarita[0][indice_migliore]
+
+    return documenti[indice_migliore], punteggio_migliore
+
+# Il nostro "database" di documenti di test
+corpus = [
+    "L'intelligenza artificiale sta trasformando le dinamiche aziendali.",
+    "La sicurezza informatica richiede protocolli di crittografia sempre più avanzati.",
+    "Il machine learning permette ai sistemi di imparare dai dati storici.",
+    "Le reti neurali sono alla base dei moderni modelli generativi multimodali."
+]
+
+ricerca = "Come funziona l'apprendimento automatico?"
+
+risultato, score = trova_documento_simile(ricerca, corpus)
+
+print(f"Query inserita: '{ricerca}'\n")
+print(f"Risultato migliore: '{risultato}'")
+print(f"Affinità (Score): {score:.2f} su 1.00")

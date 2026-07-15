@@ -1,0 +1,51 @@
+import hashlib
+import os
+
+def calcola_hash_file(percorso_file, algoritmo="sha256"):
+    """
+    Calcola l'hash crittografico di un file per verificarne l'integrità.
+    Legge il file a blocchi (chunk) per ottimizzare l'uso della RAM.
+    """
+    # Inizializza l'oggetto hash
+    hash_obj = hashlib.new(algoritmo)
+
+    try:
+        # Apre il file in modalità lettura binaria (rb)
+        with open(percorso_file, "rb") as file:
+            # Legge il file in blocchi da 4096 byte (4KB)
+            for blocco in iter(lambda: file.read(4096), b""):
+                hash_obj.update(blocco)
+        
+        # Restituisce l'hash in formato esadecimale
+        return hash_obj.hexdigest()
+    
+    except FileNotFoundError:
+        return "Errore: File non trovato. Controlla il percorso."
+    except Exception as e:
+        return f"Errore imprevisto durante la lettura: {e}"
+
+# --- SEZIONE DI TEST ---
+nome_file_test = "documento_riservato.txt"
+
+# 1. Creiamo un file temporaneo per testare lo script
+with open(nome_file_test, "w", encoding="utf-8") as f:
+    f.write("Questo è un documento aziendale riservato. Non modificare.")
+
+# 2. Calcoliamo l'impronta digitale del file appena creato
+impronta_originale = calcola_hash_file(nome_file_test)
+print(f"File analizzato: {nome_file_test}")
+print(f"Impronta SHA-256 originale: {impronta_originale}\n")
+
+# 3. Simuliamo una manomissione del file
+with open(nome_file_test, "a", encoding="utf-8") as f:
+    f.write(" (Aggiunta non autorizzata)")
+
+impronta_alterata = calcola_hash_file(nome_file_test)
+print(f"File dopo la modifica: {nome_file_test}")
+print(f"Nuova Impronta SHA-256:     {impronta_alterata}")
+
+if impronta_originale != impronta_alterata:
+    print("\n[ALLARME] L'hash non corrisponde: il file è stato compromesso o alterato!")
+
+# Pulizia: eliminiamo il file di test
+os.remove(nome_file_test)
