@@ -1,0 +1,60 @@
+import math
+import os
+import time
+from collections import Counter
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+def shannon_entropy(file_path):
+    """Calcola l'entropia di Shannon di un file per determinare se è stato criptato."""
+    try:
+        with open(file_path, 'rb') as f:
+            data = f.read()
+            if not data:
+                return 0.0
+            
+            # Calcolo delle probabilità dei byte
+            byte_counts = Counter(data)
+            probabilities = [count / len(data) for count in byte_counts.values()]
+            
+            # Calcolo dell'entropia
+            entropy = -sum(p * math.log2(p) for p in probabilities)
+            return entropy
+    except Exception:
+        return 0.0
+
+class RansomwareHeuristicWatcher(FileSystemEventHandler):
+    def __init__(self, entropy_threshold=7.8):
+        # Un file criptato o compresso ha tipicamente un'entropia superiore a 7.5
+        self.threshold = entropy_threshold
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            entropy = shannon_entropy(event.src_path)
+            # Analizziamo solo file che non sono già nativamente compressi (.zip, .jpg, ecc.)
+            if entropy > self.threshold and not event.src_path.endswith(('.zip', '.gz', '.png')):
+                print(f"\n[!!! RANSOMWARE ALERT !!!]")
+                print(f"File compromesso: {event.src_path}")
+                print(f"Entropia altissima rilevata ({entropy:.2f}/8.0). Criptazione in corso!")
+                print(f"Azione: Isolare l'host dalla rete immediatamente.")
+
+if __name__ == '__main__':
+    # Impostiamo la directory da difendere (es. documenti sensibili)
+    path_to_watch = "./documenti_sicuri"
+    os.makedirs(path_to_watch, exist_ok=True)
+    
+    print(f"[*] Sensore Euristico Anti-Ransomware attivo su: {path_to_watch}")
+    print("[*] Calcolo continuo dell'entropia di Shannon in background...")
+    
+    event_handler = RansomwareHeuristicWatcher()
+    observer = Observer()
+    observer.schedule(event_handler, path_to_watch, recursive=True)
+    observer.start()
+    
+    try:
+        while True:
+            time.sleep(1)
+            # Per testarlo: crea un file in "./documenti_sicuri", poi riempilo di byte randomici
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()

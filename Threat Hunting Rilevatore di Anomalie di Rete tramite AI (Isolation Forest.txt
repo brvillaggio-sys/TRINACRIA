@@ -1,0 +1,46 @@
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+import warnings
+
+warnings.filterwarnings('ignore')
+
+class NetworkAnomalyDetector:
+    def __init__(self, contamination=0.05):
+        # contamination: percentuale stimata di traffico anomalo nel dataset
+        self.model = IsolationForest(n_estimators=100, contamination=contamination, random_state=42)
+        
+    def train_model(self, network_data):
+        print("[*] Addestramento del modello Isolation Forest in corso...")
+        # L'algoritmo crea "alberi" isolando i punti; le anomalie vengono isolate prima
+        self.model.fit(network_data)
+        print("[*] Addestramento completato.")
+
+    def detect_threats(self, new_data):
+        print("[*] Analisi del traffico in tempo reale...")
+        # Ritorna 1 per traffico normale, -1 per anomalia
+        predictions = self.model.predict(new_data)
+        
+        anomalies = new_data[predictions == -1]
+        if not anomalies.empty:
+            print(f"[ALLERTA CRITICA] Rilevate {len(anomalies)} connessioni anomale!")
+            print(anomalies)
+        else:
+            print("[SICURO] Nessuna anomalia rilevata nel flusso di rete.")
+
+if __name__ == '__main__':
+    # Creiamo un dataset simulato (es. Durata Connessione, Byte Inviati, Byte Ricevuti)
+    np.random.seed(42)
+    normal_traffic = pd.DataFrame(np.random.normal(loc=[10, 500, 2000], scale=[2, 50, 200], size=(1000, 3)), 
+                                  columns=['Duration_sec', 'Bytes_Sent', 'Bytes_Recv'])
+    
+    # Simuliamo un traffico anomalo (es. attacco DDoS o Esfiltrazione massiva)
+    attack_traffic = pd.DataFrame([[120, 50000, 10], [0.1, 1000, 500000]], 
+                                  columns=['Duration_sec', 'Bytes_Sent', 'Bytes_Recv'])
+    
+    detector = NetworkAnomalyDetector()
+    detector.train_model(normal_traffic)
+    
+    # Testiamo il modello fornendogli dati misti
+    test_data = pd.concat([normal_traffic.tail(5), attack_traffic])
+    detector.detect_threats(test_data)

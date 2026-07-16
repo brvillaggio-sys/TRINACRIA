@@ -1,0 +1,57 @@
+import asyncio
+import logging
+from datetime import datetime
+
+# Configurazione del sistema di logging per la Threat Intelligence
+logging.basicConfig(
+    filename='honeypot_intel.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+class AsyncHoneypot:
+    def __init__(self, host='0.0.0.0', port=2222):
+        self.host = host
+        self.port = port
+
+    async def handle_attacker(self, reader, writer):
+        addr = writer.get_extra_info('peername')
+        logging.info(f"[ALLERTA] Connessione rilevata da: {addr}")
+        
+        try:
+            # Simuliamo il banner di un server OpenSSH vulnerabile
+            writer.write(b"SSH-2.0-OpenSSH_7.2p2 Ubuntu-4ubuntu2.2\r\n")
+            await writer.drain()
+            
+            # Attendiamo il payload dell'attaccante (timeout di 10 secondi)
+            data = await asyncio.wait_for(reader.read(1024), timeout=10.0)
+            
+            if data:
+                payload = data.decode('utf-8', errors='ignore').strip()
+                logging.info(f"[PAYLOAD] Dati ricevuti da {addr}: {payload}")
+                
+            # Chiudiamo brutalmente la connessione per frustrare lo scanner
+            writer.close()
+            await writer.wait_closed()
+            logging.info(f"[DISCONNESSO] Connessione chiusa con {addr}")
+            
+        except asyncio.TimeoutError:
+            logging.warning(f"[TIMEOUT] L'attaccante {addr} non ha inviato dati in tempo utile.")
+            writer.close()
+        except Exception as e:
+            logging.error(f"[ERRORE] Gestione anomala con {addr}: {str(e)}")
+
+    async def start(self):
+        server = await asyncio.start_server(self.handle_attacker, self.host, self.port)
+        addr = server.sockets[0].getsockname()
+        print(f"[*] Honeypot Asincrono in ascolto su {addr}...")
+        
+        async with server:
+            await server.serve_forever()
+
+if __name__ == '__main__':
+    # Esegue l'honeypot nel loop asincrono (simulato sulla porta 2222 per sicurezza)
+    try:
+        asyncio.run(AsyncHoneypot().start())
+    except KeyboardInterrupt:
+        print("\n[*] Honeypot terminato.")
