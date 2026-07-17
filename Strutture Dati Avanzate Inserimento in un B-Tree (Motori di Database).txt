@@ -1,0 +1,97 @@
+class BTreeNode:
+    def __init__(self, leaf=False):
+        self.leaf = leaf
+        self.keys = []
+        self.children = []
+
+class BTree:
+    def __init__(self, t):
+        self.root = BTreeNode(True)
+        # t è il grado minimo. Ogni nodo (eccetto la radice) deve avere almeno t-1 chiavi
+        # e al massimo 2t-1 chiavi.
+        self.t = t 
+
+    def search(self, k, node=None):
+        if node is None:
+            node = self.root
+        
+        i = 0
+        while i < len(node.keys) and k > node.keys[i]:
+            i += 1
+            
+        if i < len(node.keys) and k == node.keys[i]:
+            return (node, i) # Trovato
+            
+        elif node.leaf:
+            return None # Non trovato
+            
+        else:
+            return self.search(k, node.children[i])
+
+    def insert(self, k):
+        root = self.root
+        # Se la radice è piena, l'albero deve crescere in altezza
+        if len(root.keys) == (2 * self.t) - 1:
+            new_root = BTreeNode()
+            self.root = new_root
+            new_root.children.insert(0, root)
+            self._split_child(new_root, 0)
+            self._insert_non_full(new_root, k)
+        else:
+            self._insert_non_full(root, k)
+
+    def _insert_non_full(self, x, k):
+        i = len(x.keys) - 1
+        if x.leaf:
+            # Trova la posizione corretta e inserisce la chiave
+            x.keys.append(None) # Estende la lista
+            while i >= 0 and k < x.keys[i]:
+                x.keys[i + 1] = x.keys[i]
+                i -= 1
+            x.keys[i + 1] = k
+        else:
+            # Trova il figlio in cui scendere
+            while i >= 0 and k < x.keys[i]:
+                i -= 1
+            i += 1
+            
+            # Se il figlio è pieno, dividilo prima di scendere
+            if len(x.children[i].keys) == (2 * self.t) - 1:
+                self._split_child(x, i)
+                if k > x.keys[i]:
+                    i += 1
+            self._insert_non_full(x.children[i], k)
+
+    def _split_child(self, x, i):
+        t = self.t
+        y = x.children[i]
+        z = BTreeNode(y.leaf)
+        
+        # z prende la metà destra delle chiavi di y
+        x.children.insert(i + 1, z)
+        x.keys.insert(i, y.keys[t - 1])
+        
+        z.keys = y.keys[t: (2 * t) - 1]
+        y.keys = y.keys[0: t - 1]
+        
+        if not y.leaf:
+            # z prende anche la metà destra dei figli di y
+            z.children = y.children[t: 2 * t]
+            y.children = y.children[0: t]
+
+    def print_tree(self, x=None, l=0):
+        if x is None:
+            x = self.root
+        print("Livello", l, "Chiavi:", x.keys)
+        for i in x.children:
+            self.print_tree(i, l + 1)
+
+# Esempio di utilizzo:
+btree = BTree(t=3) # Grado minimo 3 (max chiavi per nodo = 5)
+
+print("Inserimento di 15 chiavi strutturate...")
+for item in [10, 20, 5, 6, 12, 30, 7, 17, 45, 60, 3, 2, 8, 9, 11]:
+    btree.insert(item)
+
+print("\nStruttura dell'albero B-Tree dopo l'inserimento (nota lo splitting dei nodi):")
+btree.print_tree()

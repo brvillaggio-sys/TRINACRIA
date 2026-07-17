@@ -1,0 +1,76 @@
+import time
+from collections import deque
+
+class Task:
+    """Un wrapper per una coroutine (un generatore) che ne tiene traccia."""
+    def __init__(self, coro):
+        self.coro = coro
+        self.ready = True
+
+class EventLoop:
+    """Il cuore del sistema: gestisce i task e decide chi deve girare e quando."""
+    def __init__(self):
+        self.tasks = deque()
+        self.sleeping = [] # Lista di tuple (timestamp_risveglio, task)
+
+    def create_task(self, coro):
+        task = Task(coro)
+        self.tasks.append(task)
+
+    def run(self):
+        while self.tasks or self.sleeping:
+            # 1. Controlla se ci sono task "addormentati" che devono essere svegliati
+            now = time.time()
+            awake_tasks = [t for t in self.sleeping if t[0] <= now]
+            for t in awake_tasks:
+                self.sleeping.remove(t)
+                t[1].ready = True
+                self.tasks.append(t[1])
+
+            # 2. Esegui il prossimo task pronto
+            if not self.tasks:
+                time.sleep(0.01) # Nessun task pronto, non bruciare la CPU
+                continue
+
+            current_task = self.tasks.popleft()
+            
+            try:
+                # Esegui il task fino al prossimo 'yield'
+                yielded_value = next(current_task.coro)
+                
+                # Se il task ha fatto yield di un tempo, lo mettiamo a dormire
+                if isinstance(yielded_value, float):
+                    current_task.ready = False
+                    self.sleeping.append((now + yielded_value, current_task))
+                else:
+                    # Altrimenti lo rimettiamo in coda
+                    self.tasks.append(current_task)
+            except StopIteration:
+                # Il generatore ha finito, il task è completato
+                pass
+
+# --- Costruiamo le nostre funzioni asincrone "custom" ---
+
+def async_sleep(seconds):
+    """Simula un'operazione I/O che blocca (es. chiamata API). Cede il controllo all'Event Loop."""
+    yield float(seconds)
+
+def elaborazione_dati(id_processo, cicli):
+    """Una simulazione di una funzione che fa lavoro ma ogni tanto si ferma."""
+    print(f"[Processo {id_processo}] Iniziato.")
+    for i in range(cicli):
+        print(f"[Processo {id_processo}] Lavorando... (passo {i+1}/{cicli})")
+        # Simula una chiamata API o una query al DB che impiega tempo
+        yield from async_sleep(0.5) 
+    print(f"[Processo {id_processo}] Completato!")
+
+# Testiamo il nostro Event Loop custom
+loop = EventLoop()
+# Creiamo tre processi che partiranno e si incastreranno a vicenda in modo non bloccante
+loop.create_task(elaborazione_dati("Alfa", 3))
+loop.create_task(elaborazione_dati("Beta", 2))
+loop.create_task(elaborazione_dati("Gamma", 4))
+
+print("Inizio Event Loop...")
+loop.run()
+print("Tutti i processi terminati asincronamente su un singolo thread.")

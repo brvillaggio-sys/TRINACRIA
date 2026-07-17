@@ -1,0 +1,74 @@
+import numpy as np
+
+class MultiHeadAttention:
+    def __init__(self, d_model, num_heads):
+        assert d_model % num_heads == 0, "La dimensione del modello deve essere divisibile per il numero di teste"
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_k = d_model // num_heads
+        
+        # Inizializzazione dei pesi (matrici di proiezione)
+        # In un modello reale verrebbero addestrati, qui li randomizziamo per la struttura
+        self.W_q = np.random.randn(d_model, d_model) * 0.01
+        self.W_k = np.random.randn(d_model, d_model) * 0.01
+        self.W_v = np.random.randn(d_model, d_model) * 0.01
+        self.W_o = np.random.randn(d_model, d_model) * 0.01
+
+    def scaled_dot_product_attention(self, Q, K, V, mask=None):
+        # Prodotto scalare tra Query e Key, scalato per la radice quadrata di d_k
+        matmul_qk = np.matmul(Q, K.swapaxes(-2, -1))
+        scaled_attention_logits = matmul_qk / np.sqrt(self.d_k)
+        
+        # Applicazione della maschera (per impedire al modello di "guardare nel futuro" durante la generazione)
+        if mask is not None:
+            scaled_attention_logits += (mask * -1e9)
+            
+        # Softmax per ottenere i pesi di attenzione normalizzati (somma = 1)
+        attention_weights = np.exp(scaled_attention_logits) / np.sum(np.exp(scaled_attention_logits), axis=-1, keepdims=True)
+        
+        # Moltiplicazione per i Values
+        output = np.matmul(attention_weights, V)
+        return output, attention_weights
+
+    def split_heads(self, x, batch_size):
+        # Rimodella il tensore per separare le teste: (batch_size, seq_len, num_heads, d_k)
+        x = x.reshape(batch_size, -1, self.num_heads, self.d_k)
+        return x.swapaxes(1, 2) # (batch_size, num_heads, seq_len, d_k)
+
+    def forward(self, x, mask=None):
+        batch_size = x.shape[0]
+        
+        # 1. Moltiplicazione per i pesi per ottenere Q, K, V
+        Q = np.matmul(x, self.W_q)
+        K = np.matmul(x, self.W_k)
+        V = np.matmul(x, self.W_v)
+        
+        # 2. Suddivisione nelle diverse "teste" di attenzione
+        Q = self.split_heads(Q, batch_size)
+        K = self.split_heads(K, batch_size)
+        V = self.split_heads(V, batch_size)
+        
+        # 3. Calcolo dell'attenzione
+        scaled_attention, _ = self.scaled_dot_product_attention(Q, K, V, mask)
+        
+        # 4. Ricombinazione delle teste
+        scaled_attention = scaled_attention.swapaxes(1, 2)
+        concat_attention = scaled_attention.reshape(batch_size, -1, self.d_model)
+        
+        # 5. Proiezione finale
+        output = np.matmul(concat_attention, self.W_o)
+        return output
+
+# Esempio di utilizzo:
+# Simuliamo una frase di 5 "token" (parole), dove ogni token è un vettore di dimensione 64
+batch_size = 2
+seq_len = 5
+d_model = 64
+num_heads = 8
+
+input_sequence = np.random.randn(batch_size, seq_len, d_model)
+mha = MultiHeadAttention(d_model, num_heads)
+output = mha.forward(input_sequence)
+
+print(f"Forma dell'input: {input_sequence.shape}")
+print(f"Forma dell'output: {output.shape} (Il tensore ha 'compreso' il contesto globale della sequenza)")
