@@ -1,0 +1,35 @@
+import socket
+from concurrent.futures import ThreadPoolExecutor
+
+def scansiona_porta(ip: str, porta: int) -> int | None:
+    """Tenta una connessione a una porta specifica. Ritorna la porta se è aperta."""
+    # Crea un socket TCP
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5) # Timeout breve per non bloccare lo script
+        try:
+            risultato = s.connect_ex((ip, porta))
+            if risultato == 0:
+                return porta
+        except socket.error:
+            pass
+    return None
+
+def scanner_veloce(ip_target: str, porta_max: int = 1024) -> list[int]:
+    """Scansiona le porte di un IP usando thread multipli per velocizzare l'I/O."""
+    print(f"Inizio scansione su {ip_target} (0-{porta_max})...")
+    porte_aperte = []
+    
+    # Usa un pool di thread per testare le porte in parallelo
+    with ThreadPoolExecutor(max_workers=50) as esecutore:
+        # Crea i task per tutte le porte
+        risultati = esecutore.map(lambda p: scansiona_porta(ip_target, p), range(1, porta_max + 1))
+        
+        for porta in risultati:
+            if porta is not None:
+                print(f"[!] Porta aperta trovata: {porta}")
+                porte_aperte.append(porta)
+                
+    return porte_aperte
+
+# Esempio d'uso (scansiona il router locale):
+# scanner_veloce("192.168.1.1", 100)
