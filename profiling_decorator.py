@@ -1,0 +1,27 @@
+import time
+from functools import wraps
+
+def calcola_tempo(func):
+    """Decoratore che misura il tempo di esecuzione di una funzione."""
+    @wraps(func) # Mantiene il nome originale e la docstring della funzione decorata
+    def wrapper(*args, **kwargs):
+        tempo_inizio = time.perf_counter()
+        risultato = func(*args, **kwargs)
+        tempo_fine = time.perf_counter()
+        
+        durata = tempo_fine - tempo_inizio
+        print(f"[@calcola_tempo] '{func.__name__}' eseguita in {durata:.4f} secondi")
+        return risultato
+    return wrapper
+
+# Usiamo il decoratore su una funzione di prova
+@calcola_tempo
+def elaborazione_pesante(cicli: int):
+    """Simula un'operazione complessa che impiega tempo."""
+    totale = 0
+    for i in range(cicli):
+        totale += i ** 2
+    return totale
+
+# Esempio d'uso:
+# risultato = elaborazione_pesante(5_000_000)
