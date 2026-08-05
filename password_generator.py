@@ -1,0 +1,21 @@
+import secrets
+import string
+
+def genera_password_sicura(lunghezza=16):
+    """
+    Genera una password estremamente sicura unendo lettere, 
+    numeri e caratteri speciali.
+    """
+    # Creiamo un "alfabeto" con tutti i caratteri possibili
+    caratteri = string.ascii_letters + string.digits + string.punctuation
+    
+    # secrets.choice sceglie un carattere in modo crittograficamente sicuro
+    # Il ciclo for lo ripete per la lunghezza desiderata
+    password = ''.join(secrets.choice(caratteri) for i in range(lunghezza))
+    
+    return password
+
+# --- TEST ---
+print("Generazione Password in corso...\n")
+print(f"Password da 16 caratteri: {genera_password_sicura(16)}")
+print(f"Password da 24 caratteri (Livello Paranoia): {genera_password_sicura(24)}")
