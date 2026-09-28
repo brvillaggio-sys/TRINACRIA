@@ -1,3 +1,20 @@
-cryptography>=41.0.0
-watchdog>=3.0.0
-requests>=2.31.0
+# Cyber Toolkit - Requirements
+# Installa: pip install -r requirements.txt
+
+# Core cryptography
+pycryptodome>=3.15.0
+
+# DNS queries (OSINT)
+dnspython>=2.3.0
+
+# HTTP requests (OSINT, social scraper)
+requests>=2.28.0
+
+# Optional: advanced packet crafting
+# scapy>=2.5.0
+
+# Optional: WHOIS lookups
+# python-whois>=0.8.0
+
+# Optional: terminal colors
+# colorama>=0.4.6
